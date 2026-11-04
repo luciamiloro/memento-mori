@@ -401,6 +401,9 @@ button:disabled {
 
 .life-info em {
   width: 100%;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
   color: var(--accent);
   font-family: 'IM Fell English', Georgia, serif;
 }
@@ -536,6 +539,44 @@ button:disabled {
   }
 }
 
+/* ───────── Texto explicativo (estático, en index.html) ───────── */
+
+.about {
+  max-width: 680px;
+  margin: 0 auto;
+  padding: 8px 16px 56px;
+  color: var(--text-muted);
+}
+
+.about h2 {
+  margin: 0 0 12px;
+  font-family: 'IM Fell English', Georgia, serif;
+  font-weight: 400;
+  font-size: 28px;
+  line-height: 1.2;
+  color: var(--text);
+}
+
+.about h3 {
+  margin: 24px 0 8px;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.about p,
+.about ol {
+  margin: 0 0 12px;
+}
+
+.about ol {
+  padding-left: 20px;
+}
+
+.about li + li {
+  margin-top: 4px;
+}
+
 /* ───────── Impresión: sólo el póster, a tamaño de hoja ───────── */
 
 @media print {
@@ -550,6 +591,7 @@ button:disabled {
   .controls,
   .view-switch,
   .life,
+  .about,
   .tooltip {
     display: none !important;
   }

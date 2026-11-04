@@ -116,7 +116,8 @@ export function LifeView({ birth, name, milestones, t }: LifeViewProps) {
         <span>
           {formatDate(weekStart(birth, selected), t.locale)} · {t.ageLabel(Math.floor(selected / WEEKS_PER_YEAR))}
         </span>
-        {selMilestone && <em>{selMilestone}</em>}
+        {/* Siempre presente (vacía si no hay hito) para que la franja no cambie de alto y la grilla no salte. */}
+        {milestoneMap.size > 0 && <em>{selMilestone ?? ' '}</em>}
       </div>
 
       <div

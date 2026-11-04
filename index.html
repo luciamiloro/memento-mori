@@ -3,10 +3,45 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="Tu vida en semanas: generá un póster imprimible con las semanas vividas y las que quedan." />
-    <title>Memento mori</title>
+    <title>Memento Mori: tu vida en semanas | Póster imprimible</title>
+    <meta
+      name="description"
+      content="Calendario memento mori: mirá tu vida en semanas, hasta los 90 años. Cargá tu fecha de nacimiento, marcá tus hitos y descargá un póster imprimible en A4 o A3, gratis."
+    />
+    <link rel="canonical" href="https://mementomori-calendar.vercel.app/" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="theme-color" content="#1c1a17" />
+
+    <!-- Vista previa al compartir (WhatsApp, LinkedIn, Facebook, X) -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Memento Mori" />
+    <meta property="og:locale" content="es_AR" />
+    <meta property="og:url" content="https://mementomori-calendar.vercel.app/" />
+    <meta property="og:title" content="Memento Mori: tu vida en semanas" />
+    <meta
+      property="og:description"
+      content="Cada casilla es una semana de tu vida. Mirá cuántas viviste, cuántas quedan y descargá tu póster imprimible."
+    />
+    <meta property="og:image" content="https://mementomori-calendar.vercel.app/og-image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="Póster Memento Mori: una grilla de semanas, las vividas rellenas y la actual en rojo." />
+    <meta name="twitter:card" content="summary_large_image" />
+
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "WebApplication",
+        "name": "Memento Mori: tu vida en semanas",
+        "url": "https://mementomori-calendar.vercel.app/",
+        "description": "Calendario memento mori que muestra tu vida en semanas hasta los 90 años y genera un póster imprimible.",
+        "applicationCategory": "LifestyleApplication",
+        "operatingSystem": "Web",
+        "inLanguage": ["es", "en"],
+        "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" }
+      }
+    </script>
+
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -16,6 +51,30 @@
   </head>
   <body>
     <div id="root"></div>
+
+    <!-- Texto estático: lo lee Google sin ejecutar JavaScript y explica la idea a quien llega. -->
+    <section class="about" aria-labelledby="about-title">
+      <h2 id="about-title">¿Qué es un calendario memento mori?</h2>
+      <p>
+        <em>Memento mori</em> es una expresión latina que significa «recordá que vas a morir». Los estoicos, como
+        Séneca y Marco Aurelio, la usaban no para entristecerse sino para no desperdiciar el tiempo: si la vida es
+        finita, cada día cuenta.
+      </p>
+      <p>
+        Este calendario muestra una vida de 90 años en semanas: 4.680 casillas, una por cada semana. Las que ya viviste
+        aparecen rellenas, la actual en rojo y el resto queda por delante. Verlas todas juntas ayuda a dimensionar el
+        tiempo que tenés y a decidir en qué usarlo.
+      </p>
+      <h3>Cómo usarlo</h3>
+      <ol>
+        <li>Cargá tu fecha de nacimiento.</li>
+        <li>Si querés, sumá tu nombre y hasta seis hitos de tu vida: se marcan en la grilla.</li>
+        <li>Miralo en pantalla o elegí fondo oscuro o claro y tamaño A4 o A3.</li>
+        <li>Imprimilo, guardalo como PDF o descargalo en PNG a 300 dpi para enmarcarlo.</li>
+      </ol>
+      <p>Es gratis y tus datos no salen de tu navegador: no se envían a ningún servidor.</p>
+    </section>
+
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
