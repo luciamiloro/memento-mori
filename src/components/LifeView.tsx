@@ -1,4 +1,4 @@
-import { memo, useMemo, useState } from 'react';
+import { memo, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { TOTAL_WEEKS, WEEKS_PER_YEAR, YEARS, formatDate, todayUTC, weekIndex, weekStart } from '../lib/weeks';
 import type { Strings } from '../i18n';
 
@@ -8,6 +8,8 @@ interface LifeViewProps {
   milestones: { ms: number; label: string }[];
   t: Strings;
 }
+
+const LABEL_W = 18;
 
 interface CellsProps {
   lived: number;
@@ -22,7 +24,7 @@ const LifeCells = memo(function LifeCells({ lived, milestones, selected }: Cells
     const dec = r > 0 && r % 10 === 0;
     items.push(
       <span key={`y${r}`} className={dec ? 'life-year dec' : 'life-year'} aria-hidden="true">
-        {r % 10 === 0 ? r : ''}
+        {dec && <span>{r}</span>}
       </span>,
     );
     for (let c = 0; c < WEEKS_PER_YEAR; c++) {
@@ -41,6 +43,24 @@ const LifeCells = memo(function LifeCells({ lived, milestones, selected }: Cells
 export function LifeView({ birth, name, milestones, t }: LifeViewProps) {
   const lived = Math.max(0, Math.min(weekIndex(birth, todayUTC()), TOTAL_WEEKS));
   const [selected, setSelected] = useState(lived);
+
+  // Casillas de tamaño entero en píxeles: con anchos fraccionarios el navegador redondea
+  // distinto cada columna y la grilla se ve como rayas irregulares.
+  const gridRef = useRef<HTMLDivElement>(null);
+  const [cell, setCell] = useState<{ size: number; gap: number } | null>(null);
+  useLayoutEffect(() => {
+    const el = gridRef.current?.parentElement;
+    if (!el) return;
+    const ro = new ResizeObserver(() => {
+      const cs = getComputedStyle(el);
+      const w = el.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
+      const fit = (gap: number) => Math.floor((w - LABEL_W - gap * WEEKS_PER_YEAR) / WEEKS_PER_YEAR);
+      const gap = fit(2) >= 8 ? 2 : 1;
+      setCell({ size: Math.max(2, Math.min(12, fit(gap))), gap });
+    });
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
   const nf = new Intl.NumberFormat(t.locale);
   const pf = new Intl.NumberFormat(t.locale, { maximumFractionDigits: 1 });
 
@@ -100,7 +120,18 @@ export function LifeView({ birth, name, milestones, t }: LifeViewProps) {
       </div>
 
       <div
+        ref={gridRef}
         className="life-grid"
+        style={
+          cell
+            ? {
+                gridTemplateColumns: `${LABEL_W}px repeat(${WEEKS_PER_YEAR}, ${cell.size}px)`,
+                gap: cell.gap,
+                '--cell': `${cell.size}px`,
+                '--gap': `${cell.gap}px`,
+              } as React.CSSProperties
+            : undefined
+        }
         role="img"
         aria-label={t.gridLabel(nf.format(lived), nf.format(TOTAL_WEEKS - lived))}
         onClick={pick}

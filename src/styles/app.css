@@ -407,18 +407,28 @@ button:disabled {
 
 .life-grid {
   display: grid;
-  grid-template-columns: 1.6em repeat(52, minmax(0, 1fr));
+  grid-template-columns: 18px repeat(52, minmax(0, 1fr));
   gap: 1px;
+  justify-content: center;
   user-select: none;
   -webkit-tap-highlight-color: transparent;
 }
 
+/* La celda de etiqueta no tiene contenido en el flujo: no estira la fila. */
 .life-year {
-  align-self: center;
+  position: relative;
+}
+
+.life-year > span {
+  position: absolute;
+  right: 4px;
+  top: 50%;
+  transform: translateY(-50%);
   font-size: 9px;
   line-height: 1;
   color: var(--text-muted);
   font-variant-numeric: tabular-nums;
+  white-space: nowrap;
 }
 
 .life-c {
@@ -517,10 +527,6 @@ button:disabled {
   .life {
     padding: 18px 12px;
     margin-inline: -4px;
-  }
-  .life-grid {
-    grid-template-columns: 1.4em repeat(52, minmax(0, 1fr));
-    gap: 0.5px;
   }
 }
 
