@@ -3,6 +3,7 @@ import { toPng } from 'html-to-image';
 import { strings, type Lang } from './i18n';
 import { Controls, type Paper } from './components/Controls';
 import { Poster, type Milestone, type Tone } from './components/Poster';
+import { LifeView } from './components/LifeView';
 import { parseISODate, todayUTC } from './lib/weeks';
 
 const POSTER_W = 840;
@@ -19,7 +20,10 @@ interface Saved {
   paper: Paper;
   lang: Lang;
   theme: 'light' | 'dark';
+  view: View;
 }
+
+type View = 'web' | 'poster';
 
 function load(): Partial<Saved> {
   try {
@@ -40,16 +44,19 @@ export default function App() {
   const [milestones, setMilestones] = useState<Milestone[]>(saved.milestones ?? []);
   const [tone, setTone] = useState<Tone>(saved.tone ?? 'dark');
   const [paper, setPaper] = useState<Paper>(saved.paper ?? 'A4');
+  const [view, setView] = useState<View>(
+    saved.view ?? (typeof matchMedia !== 'undefined' && matchMedia('(max-width: 820px)').matches ? 'web' : 'poster'),
+  );
   const [exporting, setExporting] = useState(false);
   const t = strings[lang];
 
   useEffect(() => {
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify({ birth, name, milestones, tone, paper, lang, theme }));
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({ birth, name, milestones, tone, paper, lang, theme, view }));
     } catch {
       /* modo privado: no pasa nada */
     }
-  }, [birth, name, milestones, tone, paper, lang, theme]);
+  }, [birth, name, milestones, tone, paper, lang, theme, view]);
 
   useEffect(() => {
     document.documentElement.dataset.theme = theme;
@@ -144,7 +151,7 @@ export default function App() {
         </div>
       </header>
 
-      <main className="layout">
+      <main className={birthValid ? 'layout has-result' : 'layout'}>
         <Controls
           t={t}
           birth={birth}
@@ -164,11 +171,28 @@ export default function App() {
           onPng={downloadPng}
         />
 
-        <section className="stage" ref={stageRef} aria-live="polite">
+        <section className="stage" ref={stageRef}>
+          {birthValid && birthMs !== null && (
+            <div className="field view-switch">
+              <div className="segmented" role="radiogroup" aria-label={t.view}>
+                {(['web', 'poster'] as View[]).map((v) => (
+                  <label key={v} className={view === v ? 'seg active' : 'seg'}>
+                    <input type="radio" name="view" value={v} checked={view === v} onChange={() => setView(v)} />
+                    {v === 'web' ? t.viewWeb : t.viewPoster}
+                  </label>
+                ))}
+              </div>
+            </div>
+          )}
+          {birthValid && birthMs !== null && view === 'web' && (
+            <LifeView birth={birthMs} name={name} milestones={parsedMilestones} t={t} />
+          )}
           {birthValid && birthMs !== null ? (
+            // En la vista web el póster sigue montado fuera de pantalla para poder imprimirlo o exportarlo.
             <div
-              className="poster-frame"
-              style={{ '--s': previewScale, '--print-s': printScale } as React.CSSProperties}
+              className={view === 'web' ? 'poster-frame offscreen' : 'poster-frame'}
+              aria-hidden={view === 'web' || undefined}
+              style={{ '--s': view === 'web' ? 1 : previewScale, '--print-s': printScale } as React.CSSProperties}
             >
               <Poster
                 ref={posterRef}
