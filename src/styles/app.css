@@ -570,6 +570,21 @@ button:disabled {
   text-align: center;
 }
 
+.share-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  max-width: 320px;
+  margin-top: 4px;
+}
+
+.to-poster {
+  width: 100%;
+  max-width: 320px;
+}
+
 /* Fondo y Tamaño, uno al lado del otro */
 .export-options {
   flex-direction: row;

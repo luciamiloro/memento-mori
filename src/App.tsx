@@ -12,9 +12,9 @@ const MM_TO_PX = 96 / 25.4;
 const PAPER_MM: Record<Paper, number> = { A4: 210, A3: 297 };
 const PNG_WIDTH: Record<Paper, number> = { A4: 2480, A3: 3508 }; // 300 dpi
 const STORAGE_KEY = 'memento-mori:v1';
-// Firma del pie de página. Si AUTHOR_URL queda vacío, el nombre se muestra sin link.
-const AUTHOR = 'Lucía';
-const AUTHOR_URL = '';
+const SITE_URL = 'https://mementomori-calendar.vercel.app/';
+// Link de contacto del pie ("¿Sugerencias? Contactame"). Si queda vacío, el pie no se muestra.
+const CONTACT_URL = 'https://www.linkedin.com/in/lucia-miloro/';
 
 interface Saved {
   birth: string;
@@ -125,17 +125,61 @@ export default function App() {
   const printScale = (PAPER_MM[paper] * MM_TO_PX) / POSTER_W;
   const posterRef = useRef<HTMLDivElement>(null);
 
+  const renderPng = (pixelRatio: number) =>
+    toPng(posterRef.current!, {
+      pixelRatio,
+      width: POSTER_W,
+      height: 1188,
+      style: { zoom: '1' },
+      filter: (node) => !(node instanceof HTMLElement && node.classList.contains('tooltip')),
+    });
+
+  // Compartir: abre el menú del sistema con la imagen del póster y el usuario elige la app y el contacto.
+  // Sin ese menú (p. ej. Firefox de escritorio): comparte sólo el texto con link o, si tampoco se puede, lo copia.
+  const [sharing, setSharing] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const [shareFile, setShareFile] = useState<File | null>(null);
+  useEffect(() => setShareFile(null), [birth, name, milestones, tone, years, lang]);
+
+  const share = async () => {
+    const text = t.shareText(SITE_URL);
+    const fallback = async () => {
+      try {
+        if (typeof navigator.share === 'function') return await navigator.share({ text });
+        await navigator.clipboard.writeText(text);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2500);
+      } catch {
+        /* el usuario canceló */
+      }
+    };
+    if (!posterRef.current || typeof navigator.canShare !== 'function') return fallback();
+    setSharing(true);
+    try {
+      let file = shareFile;
+      if (!file) {
+        const blob = await (await fetch(await renderPng(1.5))).blob();
+        file = new File([blob], 'memento-mori.png', { type: 'image/png' });
+      }
+      if (!navigator.canShare({ files: [file] })) return await fallback();
+      try {
+        await navigator.share({ files: [file], text });
+        setShareFile(null);
+      } catch (err) {
+        // Generar la imagen tarda: algunos navegadores (Safari) ya no consideran que hubo un toque.
+        // Se guarda la imagen y el segundo toque comparte al instante.
+        if (err instanceof DOMException && err.name === 'NotAllowedError') setShareFile(file);
+      }
+    } finally {
+      setSharing(false);
+    }
+  };
+
   const downloadPng = async () => {
     if (!posterRef.current) return;
     setExporting(true);
     try {
-      const url = await toPng(posterRef.current, {
-        pixelRatio: PNG_WIDTH[paper] / POSTER_W,
-        width: POSTER_W,
-        height: 1188,
-        style: { zoom: '1' },
-        filter: (node) => !(node instanceof HTMLElement && node.classList.contains('tooltip')),
-      });
+      const url = await renderPng(PNG_WIDTH[paper] / POSTER_W);
       const a = document.createElement('a');
       a.href = url;
       a.download = `memento-mori-${paper}-${tone}.png`;
@@ -144,6 +188,16 @@ export default function App() {
       setExporting(false);
     }
   };
+
+  const shareButton = (
+    <button type="button" className="ghost-btn share-btn" disabled={sharing} onClick={share}>
+      <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M12 15V3M7.5 7.5 12 3l4.5 4.5" />
+        <path d="M8 11H6a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-6a2 2 0 0 0-2-2h-2" />
+      </svg>
+      <span aria-live="polite">{sharing ? t.exporting : copied ? t.linkCopied : shareFile ? t.shareReady : t.share}</span>
+    </button>
+  );
 
   return (
     <div className="app">
@@ -237,7 +291,24 @@ export default function App() {
               <p>{t.emptyState}</p>
             </div>
           )}
-          {birthValid && (
+          {birthValid && view === 'web' && (
+            // En la vista Pantalla, las opciones del póster no tendrían efecto visible: se ofrece pasar a esa vista.
+            <div className="export-bar">
+              <button
+                type="button"
+                className="primary-btn to-poster"
+                onClick={() => {
+                  setView('poster');
+                  requestAnimationFrame(() => stageRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }));
+                }}
+              >
+                {t.toPoster}
+              </button>
+              <p className="hint">{t.toPosterHint}</p>
+              {shareButton}
+            </div>
+          )}
+          {birthValid && view === 'poster' && (
             <div className="export-bar">
               <div className="field export-options">
                 <div className="segmented" role="radiogroup" aria-label={t.tone}>
@@ -268,23 +339,22 @@ export default function App() {
                 </button>
               </div>
               <p className="hint">{t.printHint}</p>
+              {shareButton}
             </div>
           )}
         </section>
       </main>
 
-      <footer className="app-footer">
-        <p>
-          {t.madeBy}{' '}
-          {AUTHOR_URL ? (
-            <a href={AUTHOR_URL} target="_blank" rel="noopener">
-              {AUTHOR}
+      {CONTACT_URL && (
+        <footer className="app-footer">
+          <p>
+            {t.suggestions}{' '}
+            <a href={CONTACT_URL} target="_blank" rel="noopener">
+              {t.contactMe}
             </a>
-          ) : (
-            AUTHOR
-          )}
-        </p>
-      </footer>
+          </p>
+        </footer>
+      )}
 
       <Intro
         open={introOpen}
