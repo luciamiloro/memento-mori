@@ -1,6 +1,17 @@
-export const YEARS = 90;
 export const WEEKS_PER_YEAR = 52;
-export const TOTAL_WEEKS = YEARS * WEEKS_PER_YEAR; // 4680
+/** Edad final: la elige el usuario; 90 por defecto. */
+export const DEFAULT_YEARS = 90;
+export const MIN_YEARS = 40;
+export const MAX_YEARS = 120;
+
+export function clampYears(n: number): number {
+  if (!Number.isFinite(n)) return DEFAULT_YEARS;
+  return Math.min(MAX_YEARS, Math.max(MIN_YEARS, Math.round(n)));
+}
+
+export function totalWeeks(years: number): number {
+  return years * WEEKS_PER_YEAR;
+}
 const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
 
 /** Fecha "YYYY-MM-DD" → milisegundos UTC (evita corrimientos por horario de verano). */
@@ -36,4 +47,4 @@ export function jitter(index: number): number {
   return v < 3 ? v + 1 : 0;
 }
 
-export const ROMAN = ['', 'X', 'XX', 'XXX', 'XL', 'L', 'LX', 'LXX', 'LXXX'];
+export const ROMAN = ['', 'X', 'XX', 'XXX', 'XL', 'L', 'LX', 'LXX', 'LXXX', 'XC', 'C', 'CX'];

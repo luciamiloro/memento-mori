@@ -4,13 +4,17 @@ import { strings, type Lang } from './i18n';
 import { Controls, type Paper } from './components/Controls';
 import { Poster, type Milestone, type Tone } from './components/Poster';
 import { LifeView } from './components/LifeView';
-import { parseISODate, todayUTC } from './lib/weeks';
+import { Intro } from './components/Intro';
+import { DEFAULT_YEARS, MAX_YEARS, clampYears, parseISODate, todayUTC, totalWeeks } from './lib/weeks';
 
 const POSTER_W = 840;
 const MM_TO_PX = 96 / 25.4;
 const PAPER_MM: Record<Paper, number> = { A4: 210, A3: 297 };
 const PNG_WIDTH: Record<Paper, number> = { A4: 2480, A3: 3508 }; // 300 dpi
 const STORAGE_KEY = 'memento-mori:v1';
+// Firma del pie de página. Si AUTHOR_URL queda vacío, el nombre se muestra sin link.
+const AUTHOR = 'Lucía';
+const AUTHOR_URL = '';
 
 interface Saved {
   birth: string;
@@ -21,6 +25,8 @@ interface Saved {
   lang: Lang;
   theme: 'light' | 'dark';
   view: View;
+  introSeen: boolean;
+  lifespan: number;
 }
 
 type View = 'web' | 'poster';
@@ -44,19 +50,34 @@ export default function App() {
   const [milestones, setMilestones] = useState<Milestone[]>(saved.milestones ?? []);
   const [tone, setTone] = useState<Tone>(saved.tone ?? 'dark');
   const [paper, setPaper] = useState<Paper>(saved.paper ?? 'A4');
+  // Se guarda como texto para poder tipear libremente; la grilla usa el valor acotado.
+  const [lifespan, setLifespan] = useState(String(saved.lifespan ?? DEFAULT_YEARS));
+  const years = lifespan.trim() === '' ? DEFAULT_YEARS : clampYears(Number(lifespan));
   const [view, setView] = useState<View>(
     saved.view ?? (typeof matchMedia !== 'undefined' && matchMedia('(max-width: 820px)').matches ? 'web' : 'poster'),
   );
   const [exporting, setExporting] = useState(false);
+  // La bienvenida aparece sólo la primera vez (o si se abre con el botón "?").
+  const [introOpen, setIntroOpen] = useState(!saved.introSeen);
+  const [introSeen, setIntroSeen] = useState(saved.introSeen ?? false);
+  const closeIntro = () => {
+    setIntroOpen(false);
+    setIntroSeen(true);
+    // Si todavía no cargó la fecha, la primera acción es esa.
+    if (!birth) requestAnimationFrame(() => document.getElementById('birth')?.focus());
+  };
   const t = strings[lang];
 
   useEffect(() => {
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify({ birth, name, milestones, tone, paper, lang, theme, view }));
+      localStorage.setItem(
+        STORAGE_KEY,
+        JSON.stringify({ birth, name, milestones, tone, paper, lang, theme, view, introSeen, lifespan: years }),
+      );
     } catch {
       /* modo privado: no pasa nada */
     }
-  }, [birth, name, milestones, tone, paper, lang, theme, view]);
+  }, [birth, name, milestones, tone, paper, lang, theme, view, introSeen, years]);
 
   useEffect(() => {
     document.documentElement.dataset.theme = theme;
@@ -73,8 +94,12 @@ export default function App() {
 
   const birthMs = parseISODate(birth);
   const today = todayUTC();
-  const ninetyYearsAgo = Date.UTC(new Date().getFullYear() - 90, new Date().getMonth(), new Date().getDate());
-  const birthValid = birthMs !== null && birthMs <= today && birthMs > ninetyYearsAgo;
+  const yearsAgo = (n: number) => Date.UTC(new Date().getFullYear() - n, new Date().getMonth(), new Date().getDate());
+  // La fecha en sí es válida si cae dentro de la edad final más alta posible…
+  const birthInRange = birthMs !== null && birthMs <= today && birthMs > yearsAgo(MAX_YEARS);
+  // …y además tiene que ser menor que la edad final elegida.
+  const lifespanTooLow = birthInRange && birthMs <= yearsAgo(years);
+  const birthValid = birthInRange && !lifespanTooLow;
 
   const parsedMilestones = useMemo(
     () =>
@@ -128,6 +153,13 @@ export default function App() {
           <p className="app-subtitle">{t.appSubtitle}</p>
         </div>
         <div className="header-actions">
+          <button type="button" className="icon-btn" aria-label={t.about} title={t.about} onClick={() => setIntroOpen(true)}>
+            <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="12" cy="12" r="9" />
+              <path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .9-1 1.6v.6" />
+              <circle cx="12" cy="17" r=".6" fill="currentColor" />
+            </svg>
+          </button>
           <button type="button" className="ghost-btn" onClick={() => setLang(lang === 'es' ? 'en' : 'es')} lang={lang === 'es' ? 'en' : 'es'}>
             {t.toggleLang}
           </button>
@@ -155,20 +187,16 @@ export default function App() {
         <Controls
           t={t}
           birth={birth}
-          birthError={birth !== '' && !birthValid}
+          birthError={birth !== '' && !birthInRange}
+          lifespan={lifespan}
+          lifespanError={lifespanTooLow}
           name={name}
           milestones={milestones}
-          tone={tone}
-          paper={paper}
-          exporting={exporting}
-          canExport={birthValid}
           onBirth={setBirth}
+          onLifespan={setLifespan}
+          onLifespanBlur={() => setLifespan(String(years))}
           onName={setName}
           onMilestones={setMilestones}
-          onTone={setTone}
-          onPaper={setPaper}
-          onPrint={() => window.print()}
-          onPng={downloadPng}
         />
 
         <section className="stage" ref={stageRef}>
@@ -185,7 +213,7 @@ export default function App() {
             </div>
           )}
           {birthValid && birthMs !== null && view === 'web' && (
-            <LifeView birth={birthMs} name={name} milestones={parsedMilestones} t={t} />
+            <LifeView birth={birthMs} years={years} name={name} milestones={parsedMilestones} t={t} />
           )}
           {birthValid && birthMs !== null ? (
             // En la vista web el póster sigue montado fuera de pantalla para poder imprimirlo o exportarlo.
@@ -197,6 +225,7 @@ export default function App() {
               <Poster
                 ref={posterRef}
                 birth={birthMs}
+                years={years}
                 name={name}
                 milestones={parsedMilestones}
                 tone={tone}
@@ -208,8 +237,62 @@ export default function App() {
               <p>{t.emptyState}</p>
             </div>
           )}
+          {birthValid && (
+            <div className="export-bar">
+              <div className="field export-options">
+                <div className="segmented" role="radiogroup" aria-label={t.tone}>
+                  <span className="seg-title">{t.tone}</span>
+                  {(['dark', 'light'] as Tone[]).map((v) => (
+                    <label key={v} className={tone === v ? 'seg active' : 'seg'}>
+                      <input type="radio" name="tone" value={v} checked={tone === v} onChange={() => setTone(v)} />
+                      {v === 'dark' ? t.toneDark : t.toneLight}
+                    </label>
+                  ))}
+                </div>
+                <div className="segmented" role="radiogroup" aria-label={t.size}>
+                  <span className="seg-title">{t.size}</span>
+                  {(['A4', 'A3'] as Paper[]).map((v) => (
+                    <label key={v} className={paper === v ? 'seg active' : 'seg'}>
+                      <input type="radio" name="paper" value={v} checked={paper === v} onChange={() => setPaper(v)} />
+                      {v}
+                    </label>
+                  ))}
+                </div>
+              </div>
+              <div className="export-buttons">
+                <button type="button" className="primary-btn" onClick={() => window.print()}>
+                  {t.print}
+                </button>
+                <button type="button" className="ghost-btn" disabled={exporting} onClick={downloadPng}>
+                  {exporting ? t.exporting : t.png}
+                </button>
+              </div>
+              <p className="hint">{t.printHint}</p>
+            </div>
+          )}
         </section>
       </main>
+
+      <footer className="app-footer">
+        <p>
+          {t.madeBy}{' '}
+          {AUTHOR_URL ? (
+            <a href={AUTHOR_URL} target="_blank" rel="noopener">
+              {AUTHOR}
+            </a>
+          ) : (
+            AUTHOR
+          )}
+        </p>
+      </footer>
+
+      <Intro
+        open={introOpen}
+        t={t}
+        years={years}
+        cells={new Intl.NumberFormat(t.locale).format(totalWeeks(years))}
+        onClose={closeIntro}
+      />
     </div>
   );
 }

@@ -1,5 +1,5 @@
 import { forwardRef, useCallback, useLayoutEffect, useMemo, useRef, useState } from 'react';
-import { TOTAL_WEEKS, formatDate, todayUTC, weekIndex } from '../lib/weeks';
+import { formatDate, todayUTC, totalWeeks, weekIndex } from '../lib/weeks';
 import type { Strings } from '../i18n';
 import { WeekGrid } from './WeekGrid';
 
@@ -13,6 +13,7 @@ export interface Milestone {
 
 interface PosterProps {
   birth: number;
+  years: number;
   name: string;
   milestones: { ms: number; label: string }[];
   tone: Tone;
@@ -21,22 +22,23 @@ interface PosterProps {
 
 /** El póster se diseña a 840 × 1188 px (proporción ISO A) y se escala para pantalla, impresión y PNG. */
 export const Poster = forwardRef<HTMLDivElement, PosterProps>(function Poster(
-  { birth, name, milestones, tone, t },
+  { birth, years, name, milestones, tone, t },
   ref,
 ) {
+  const total = totalWeeks(years);
   const lived = Math.max(0, weekIndex(birth, todayUTC()));
   const nf = new Intl.NumberFormat(t.locale);
-  const livedTxt = nf.format(Math.min(lived, TOTAL_WEEKS));
-  const leftTxt = nf.format(Math.max(TOTAL_WEEKS - lived, 0));
+  const livedTxt = nf.format(Math.min(lived, total));
+  const leftTxt = nf.format(Math.max(total - lived, 0));
 
   const milestoneMap = useMemo(() => {
     const map = new Map<number, string>();
     for (const m of milestones) {
       const i = weekIndex(birth, m.ms);
-      if (i >= 0 && i < TOTAL_WEEKS) map.set(i, m.label);
+      if (i >= 0 && i < total) map.set(i, m.label);
     }
     return map;
-  }, [birth, milestones]);
+  }, [birth, milestones, total]);
 
   const visibleMilestones = milestones.filter((m) => m.ms >= birth && m.label.trim());
 
@@ -85,7 +87,7 @@ export const Poster = forwardRef<HTMLDivElement, PosterProps>(function Poster(
     return () => {
       cancelled = true;
     };
-  }, [livedTxt, leftTxt]);
+  }, [livedTxt, leftTxt, years]);
 
   return (
     <div ref={setRefs} className={`poster tone-${tone}`}>
@@ -112,12 +114,13 @@ export const Poster = forwardRef<HTMLDivElement, PosterProps>(function Poster(
 
       <div className="poster-body">
         <WeekGrid
+          years={years}
           birth={birth}
           lived={lived}
           milestones={milestoneMap}
           animKey={String(birth)}
           t={t}
-          label={t.gridLabel(livedTxt, leftTxt)}
+          label={t.gridLabel(years, livedTxt, leftTxt)}
         />
         <p className="poster-counter">{t.counter(livedTxt, leftTxt)}</p>
       </div>

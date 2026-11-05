@@ -3,7 +3,7 @@ export type Lang = 'es' | 'en';
 export const strings = {
   es: {
     locale: 'es-AR',
-    appSubtitle: 'Tu vida en semanas, hasta los 90 años.',
+    appSubtitle: 'Tu vida en semanas.',
     birth: 'Fecha de nacimiento',
     name: 'Nombre en el póster',
     namePlaceholder: 'Opcional',
@@ -23,17 +23,42 @@ export const strings = {
     png: 'Descargar PNG (300 dpi)',
     exporting: 'Generando…',
     emptyState: 'Cargá tu fecha de nacimiento para ver tu póster.',
-    invalidDate: 'La fecha tiene que estar entre hoy y hace 90 años.',
+    invalidDate: (n: number) => `La fecha tiene que estar entre hoy y hace ${n} años.`,
     toggleLang: 'English',
     themeLight: 'Modo claro',
     themeDark: 'Modo oscuro',
+    // pie
+    madeBy: 'Hecho por',
+    // edad final
+    lifespan: 'Edad final',
+    lifespanHint: (min: number, max: number) => `Hasta qué edad llega la grilla (entre ${min} y ${max}). Por defecto, 90.`,
+    years: 'años',
+    lifespanTooLow: 'Ya pasaste esa edad: elegí una edad final mayor.',
+    // bienvenida
+    about: '¿Qué es esto?',
+    close: 'Cerrar',
+    start: 'Empezar',
+    introTitle: '¿Qué es un calendario memento mori?',
+    introP1:
+      'Memento mori es una expresión latina que significa «recordá que vas a morir». Los estoicos, como Séneca y Marco Aurelio, la usaban no para entristecerse sino para no desperdiciar el tiempo: si la vida es finita, cada día cuenta.',
+    introP2:
+      (n: number, cells: string) =>
+      `Este calendario muestra una vida de ${n} años en semanas: ${cells} casillas, una por cada semana. Las que ya viviste aparecen rellenas, la actual en rojo y el resto queda por delante. La edad final la elegís vos.`,
+    howTitle: 'Cómo usarlo',
+    howSteps: [
+      'Cargá tu fecha de nacimiento.',
+      'Si querés, sumá tu nombre y hasta seis hitos de tu vida: se marcan en la grilla.',
+      'Miralo en pantalla o como póster, con fondo oscuro o claro, en A4 o A3.',
+      'Imprimilo, guardalo como PDF o descargalo en PNG a 300 dpi para enmarcarlo.',
+    ],
+    privacy: 'Es gratis y tus datos no salen de tu navegador: no se envían a ningún servidor.',
     // vista web
     view: 'Vista',
     viewWeb: 'Pantalla',
     viewPoster: 'Póster',
     livedLabel: 'semanas vividas',
     leftLabel: 'semanas por vivir',
-    pctLabel: (p: string) => `${p} % de 90 años`,
+    pctLabel: (p: string, n: number) => `${p} % de ${n} años`,
     ageLabel: (y: number) => (y === 1 ? '1 año' : `${y} años`),
     current: 'Esta semana',
     tapHint: 'Tocá una casilla para ver su fecha.',
@@ -43,12 +68,12 @@ export const strings = {
     counter: (lived: string, left: string) => `— ${lived} semanas vividas · ${left} por vivir —`,
     since: (date: string) => `desde el ${date}`,
     week: (n: number) => `Semana ${n}`,
-    gridLabel: (lived: string, left: string) =>
-      `Grilla de 90 años en semanas: ${lived} semanas vividas y ${left} por vivir.`,
+    gridLabel: (n: number, lived: string, left: string) =>
+      `Grilla de ${n} años en semanas: ${lived} semanas vividas y ${left} por vivir.`,
   },
   en: {
     locale: 'en-GB',
-    appSubtitle: 'Your life in weeks, up to age 90.',
+    appSubtitle: 'Your life in weeks.',
     birth: 'Date of birth',
     name: 'Name on the poster',
     namePlaceholder: 'Optional',
@@ -68,16 +93,38 @@ export const strings = {
     png: 'Download PNG (300 dpi)',
     exporting: 'Exporting…',
     emptyState: 'Enter your date of birth to see your poster.',
-    invalidDate: 'The date must be between today and 90 years ago.',
+    invalidDate: (n: number) => `The date must be between today and ${n} years ago.`,
     toggleLang: 'Español',
     themeLight: 'Light mode',
     themeDark: 'Dark mode',
+    madeBy: 'Made by',
+    lifespan: 'Final age',
+    lifespanHint: (min: number, max: number) => `How far the grid goes (between ${min} and ${max}). Default: 90.`,
+    years: 'years',
+    lifespanTooLow: 'You are already past that age: choose a higher final age.',
+    about: 'What is this?',
+    close: 'Close',
+    start: 'Get started',
+    introTitle: 'What is a memento mori calendar?',
+    introP1:
+      'Memento mori is a Latin phrase meaning “remember that you will die”. Stoics like Seneca and Marcus Aurelius used it not to feel gloomy but to stop wasting time: if life is finite, every day counts.',
+    introP2:
+      (n: number, cells: string) =>
+      `This calendar shows a ${n}-year life in weeks: ${cells} squares, one for each week. The ones you have lived are filled in, the current one is red, and the rest lie ahead. You choose the final age.`,
+    howTitle: 'How to use it',
+    howSteps: [
+      'Enter your date of birth.',
+      'Optionally add your name and up to six milestones: they are marked on the grid.',
+      'View it on screen or as a poster, on a dark or light background, in A4 or A3.',
+      'Print it, save it as a PDF or download a 300 dpi PNG to frame it.',
+    ],
+    privacy: 'It is free and your data never leaves your browser: nothing is sent to a server.',
     view: 'View',
     viewWeb: 'Screen',
     viewPoster: 'Poster',
     livedLabel: 'weeks lived',
     leftLabel: 'weeks to go',
-    pctLabel: (p: string) => `${p}% of 90 years`,
+    pctLabel: (p: string, n: number) => `${p}% of ${n} years`,
     ageLabel: (y: number) => (y === 1 ? 'age 1' : `age ${y}`),
     current: 'This week',
     tapHint: 'Tap a square to see its date.',
@@ -86,8 +133,8 @@ export const strings = {
     counter: (lived: string, left: string) => `— ${lived} weeks lived · ${left} to go —`,
     since: (date: string) => `since ${date}`,
     week: (n: number) => `Week ${n}`,
-    gridLabel: (lived: string, left: string) =>
-      `A 90-year grid in weeks: ${lived} weeks lived and ${left} to go.`,
+    gridLabel: (n: number, lived: string, left: string) =>
+      `A ${n}-year grid in weeks: ${lived} weeks lived and ${left} to go.`,
   },
 };
 

@@ -1,5 +1,6 @@
 import type { Strings } from '../i18n';
-import type { Milestone, Tone } from './Poster';
+import type { Milestone } from './Poster';
+import { MAX_YEARS, MIN_YEARS } from '../lib/weeks';
 
 export type Paper = 'A4' | 'A3';
 
@@ -9,17 +10,13 @@ interface ControlsProps {
   birthError: boolean;
   name: string;
   milestones: Milestone[];
-  tone: Tone;
-  paper: Paper;
-  exporting: boolean;
-  canExport: boolean;
+  lifespan: string;
+  lifespanError: boolean;
+  onLifespan: (v: string) => void;
+  onLifespanBlur: () => void;
   onBirth: (v: string) => void;
   onName: (v: string) => void;
   onMilestones: (v: Milestone[]) => void;
-  onTone: (v: Tone) => void;
-  onPaper: (v: Paper) => void;
-  onPrint: () => void;
-  onPng: () => void;
 }
 
 const MAX_MILESTONES = 6;
@@ -46,7 +43,35 @@ export function Controls(p: ControlsProps) {
         />
         {p.birthError && (
           <p id="birth-error" className="error" role="alert">
-            {t.invalidDate}
+            {t.invalidDate(MAX_YEARS)}
+          </p>
+        )}
+      </div>
+
+      <div className="field">
+        <label htmlFor="lifespan">{t.lifespan}</label>
+        <div className="with-unit">
+          <input
+            id="lifespan"
+            type="number"
+            inputMode="numeric"
+            min={MIN_YEARS}
+            max={MAX_YEARS}
+            step={1}
+            value={p.lifespan}
+            aria-invalid={p.lifespanError}
+            aria-describedby={p.lifespanError ? 'lifespan-hint lifespan-error' : 'lifespan-hint'}
+            onChange={(e) => p.onLifespan(e.target.value)}
+            onBlur={p.onLifespanBlur}
+          />
+          <span aria-hidden="true">{t.years}</span>
+        </div>
+        <p id="lifespan-hint" className="hint">
+          {t.lifespanHint(MIN_YEARS, MAX_YEARS)}
+        </p>
+        {p.lifespanError && (
+          <p id="lifespan-error" className="error" role="alert">
+            {t.lifespanTooLow}
           </p>
         )}
       </div>
@@ -113,37 +138,6 @@ export function Controls(p: ControlsProps) {
         )}
       </fieldset>
 
-      <fieldset className="field">
-        <legend>{t.poster}</legend>
-        <div className="segmented" role="radiogroup" aria-label={t.tone}>
-          <span className="seg-title">{t.tone}</span>
-          {(['dark', 'light'] as Tone[]).map((v) => (
-            <label key={v} className={p.tone === v ? 'seg active' : 'seg'}>
-              <input type="radio" name="tone" value={v} checked={p.tone === v} onChange={() => p.onTone(v)} />
-              {v === 'dark' ? t.toneDark : t.toneLight}
-            </label>
-          ))}
-        </div>
-        <div className="segmented" role="radiogroup" aria-label={t.size}>
-          <span className="seg-title">{t.size}</span>
-          {(['A4', 'A3'] as Paper[]).map((v) => (
-            <label key={v} className={p.paper === v ? 'seg active' : 'seg'}>
-              <input type="radio" name="paper" value={v} checked={p.paper === v} onChange={() => p.onPaper(v)} />
-              {v}
-            </label>
-          ))}
-        </div>
-      </fieldset>
-
-      <div className="actions">
-        <button type="button" className="primary-btn" disabled={!p.canExport} onClick={p.onPrint}>
-          {t.print}
-        </button>
-        <button type="button" className="ghost-btn" disabled={!p.canExport || p.exporting} onClick={p.onPng}>
-          {p.exporting ? t.exporting : t.png}
-        </button>
-        <p className="hint">{t.printHint}</p>
-      </div>
     </form>
   );
 }

@@ -1,19 +1,32 @@
 import { memo, useCallback, useRef, useState } from 'react';
-import { ROMAN, TOTAL_WEEKS, WEEKS_PER_YEAR, YEARS, formatDate, jitter, weekStart } from '../lib/weeks';
+import { ROMAN, WEEKS_PER_YEAR, formatDate, jitter, totalWeeks, weekStart } from '../lib/weeks';
 import type { Strings } from '../i18n';
 
 interface CellsProps {
+  years: number;
   lived: number;
   milestones: ReadonlyMap<number, string>;
   animKey: string;
 }
 
-/** Las 4.680 casillas. Memoizado: no se re-renderiza al tipear el nombre ni al mover el mouse. */
-const Cells = memo(function Cells({ lived, milestones, animKey }: CellsProps) {
+/** Alto disponible para la grilla en el póster (lo que ocupan 90 filas de 7 px). */
+const GRID_H = 824;
+const ROW_GAP = 1.8;
+const DECADE_GAP = 4;
+
+/** Tamaño de casilla para que entren `years` filas: 7 px hasta 90 años, más chico si hay más. */
+function cellSize(years: number): number {
+  const decades = Math.floor((years - 1) / 10);
+  const fit = (GRID_H - decades * DECADE_GAP) / years - ROW_GAP;
+  return Math.min(7, Math.floor(fit * 10) / 10);
+}
+
+/** Las casillas (52 × años). Memoizado: no se re-renderiza al tipear el nombre ni al mover el mouse. */
+const Cells = memo(function Cells({ years, lived, milestones, animKey }: CellsProps) {
   // La animación de llenado dura ~1,6 s en total, sin importar cuántas semanas haya vividas.
   const step = lived > 0 ? 1600 / lived : 0;
   const rows = [];
-  for (let r = 0; r < YEARS; r++) {
+  for (let r = 0; r < years; r++) {
     const cells = [];
     for (let c = 0; c < WEEKS_PER_YEAR; c++) {
       const i = r * WEEKS_PER_YEAR + c;
@@ -51,7 +64,7 @@ interface WeekGridProps extends CellsProps {
   label: string;
 }
 
-export function WeekGrid({ birth, lived, milestones, animKey, t, label }: WeekGridProps) {
+export function WeekGrid({ birth, years, lived, milestones, animKey, t, label }: WeekGridProps) {
   const wrapRef = useRef<HTMLDivElement>(null);
   const [tip, setTip] = useState<{ i: number; x: number; y: number } | null>(null);
 
@@ -75,12 +88,13 @@ export function WeekGrid({ birth, lived, milestones, animKey, t, label }: WeekGr
     <div
       ref={wrapRef}
       className="grid"
+      style={{ '--cell': `${cellSize(years)}px` } as React.CSSProperties}
       role="img"
       aria-label={label}
       onMouseMove={onMove}
       onMouseLeave={() => setTip(null)}
     >
-      <Cells lived={Math.min(lived, TOTAL_WEEKS)} milestones={milestones} animKey={animKey} />
+      <Cells years={years} lived={Math.min(lived, totalWeeks(years))} milestones={milestones} animKey={animKey} />
       {tip && (
         <div className="tooltip" style={{ left: tip.x, top: tip.y }} aria-hidden="true">
           <strong>{t.week(tip.i + 1)}</strong>

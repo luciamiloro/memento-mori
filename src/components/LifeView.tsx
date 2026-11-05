@@ -1,9 +1,10 @@
 import { memo, useLayoutEffect, useMemo, useRef, useState } from 'react';
-import { TOTAL_WEEKS, WEEKS_PER_YEAR, YEARS, formatDate, todayUTC, weekIndex, weekStart } from '../lib/weeks';
+import { WEEKS_PER_YEAR, formatDate, todayUTC, totalWeeks, weekIndex, weekStart } from '../lib/weeks';
 import type { Strings } from '../i18n';
 
 interface LifeViewProps {
   birth: number;
+  years: number;
   name: string;
   milestones: { ms: number; label: string }[];
   t: Strings;
@@ -12,15 +13,16 @@ interface LifeViewProps {
 const LABEL_W = 18;
 
 interface CellsProps {
+  years: number;
   lived: number;
   milestones: ReadonlyMap<number, string>;
   selected: number;
 }
 
 /** Grilla fluida: 52 columnas que se estiran al ancho disponible (pensada para el celular). */
-const LifeCells = memo(function LifeCells({ lived, milestones, selected }: CellsProps) {
+const LifeCells = memo(function LifeCells({ years, lived, milestones, selected }: CellsProps) {
   const items = [];
-  for (let r = 0; r < YEARS; r++) {
+  for (let r = 0; r < years; r++) {
     const dec = r > 0 && r % 10 === 0;
     items.push(
       <span key={`y${r}`} className={dec ? 'life-year dec' : 'life-year'} aria-hidden="true">
@@ -40,8 +42,9 @@ const LifeCells = memo(function LifeCells({ lived, milestones, selected }: Cells
   return <>{items}</>;
 });
 
-export function LifeView({ birth, name, milestones, t }: LifeViewProps) {
-  const lived = Math.max(0, Math.min(weekIndex(birth, todayUTC()), TOTAL_WEEKS));
+export function LifeView({ birth, years, name, milestones, t }: LifeViewProps) {
+  const total = totalWeeks(years);
+  const lived = Math.max(0, Math.min(weekIndex(birth, todayUTC()), total));
   const [selected, setSelected] = useState(lived);
 
   // Casillas de tamaño entero en píxeles: con anchos fraccionarios el navegador redondea
@@ -68,14 +71,16 @@ export function LifeView({ birth, name, milestones, t }: LifeViewProps) {
     const map = new Map<number, string>();
     for (const m of milestones) {
       const i = weekIndex(birth, m.ms);
-      if (i >= 0 && i < TOTAL_WEEKS) map.set(i, m.label);
+      if (i >= 0 && i < total) map.set(i, m.label);
     }
     return map;
-  }, [birth, milestones]);
+  }, [birth, milestones, total]);
 
   const visible = milestones.filter((m) => m.ms >= birth && m.label.trim());
-  const pct = (lived / TOTAL_WEEKS) * 100;
-  const selMilestone = milestoneMap.get(selected);
+  const pct = (lived / total) * 100;
+  // Si se achica la edad final, la semana elegida puede quedar fuera de la grilla.
+  const sel = Math.min(selected, total - 1);
+  const selMilestone = milestoneMap.get(sel);
 
   const pick = (e: React.SyntheticEvent) => {
     const raw = (e.target as HTMLElement).dataset.i;
@@ -92,7 +97,7 @@ export function LifeView({ birth, name, milestones, t }: LifeViewProps) {
           <span className="stat-label">{t.livedLabel}</span>
         </div>
         <div className="stat">
-          <span className="stat-num">{nf.format(TOTAL_WEEKS - lived)}</span>
+          <span className="stat-num">{nf.format(total - lived)}</span>
           <span className="stat-label">{t.leftLabel}</span>
         </div>
       </div>
@@ -104,17 +109,17 @@ export function LifeView({ birth, name, milestones, t }: LifeViewProps) {
           aria-valuemin={0}
           aria-valuemax={100}
           aria-valuenow={Math.round(pct)}
-          aria-label={t.pctLabel(pf.format(pct))}
+          aria-label={t.pctLabel(pf.format(pct), years)}
         >
           <span style={{ width: `${pct}%` }} />
         </div>
-        <p>{t.pctLabel(pf.format(pct))}</p>
+        <p>{t.pctLabel(pf.format(pct), years)}</p>
       </div>
 
       <div className="life-info" aria-live="polite">
-        <strong>{selected === lived ? t.current : t.week(selected + 1)}</strong>
+        <strong>{sel === lived ? t.current : t.week(sel + 1)}</strong>
         <span>
-          {formatDate(weekStart(birth, selected), t.locale)} · {t.ageLabel(Math.floor(selected / WEEKS_PER_YEAR))}
+          {formatDate(weekStart(birth, sel), t.locale)} · {t.ageLabel(Math.floor(sel / WEEKS_PER_YEAR))}
         </span>
         {/* Siempre presente (vacía si no hay hito) para que la franja no cambie de alto y la grilla no salte. */}
         {milestoneMap.size > 0 && <em>{selMilestone ?? ' '}</em>}
@@ -134,11 +139,11 @@ export function LifeView({ birth, name, milestones, t }: LifeViewProps) {
             : undefined
         }
         role="img"
-        aria-label={t.gridLabel(nf.format(lived), nf.format(TOTAL_WEEKS - lived))}
+        aria-label={t.gridLabel(years, nf.format(lived), nf.format(total - lived))}
         onClick={pick}
         onMouseOver={pick}
       >
-        <LifeCells lived={lived} milestones={milestoneMap} selected={selected} />
+        <LifeCells years={years} lived={lived} milestones={milestoneMap} selected={sel} />
       </div>
       <p className="hint">{t.tapHint}</p>
 

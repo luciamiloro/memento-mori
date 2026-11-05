@@ -175,14 +175,15 @@
   text-align: right;
   font-style: italic;
   font-size: 11px;
-  line-height: 7px;
+  line-height: var(--cell, 7px);
   color: var(--muted);
 }
 
+/* --cell: 7 px hasta 90 años; más chico si la edad final pide más filas */
 .c {
   display: block;
-  width: 7px;
-  height: 7px;
+  width: var(--cell, 7px);
+  height: var(--cell, 7px);
   box-sizing: border-box;
 }
 
