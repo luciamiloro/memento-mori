@@ -5,12 +5,11 @@ interface IntroProps {
   open: boolean;
   t: Strings;
   years: number;
-  cells: string;
   onClose: () => void;
 }
 
 /** Ventana de bienvenida: explica la idea antes de empezar. Usa <dialog> nativo (foco, Esc y fondo inerte). */
-export function Intro({ open, t, years, cells, onClose }: IntroProps) {
+export function Intro({ open, t, years, onClose }: IntroProps) {
   const ref = useRef<HTMLDialogElement>(null);
 
   useEffect(() => {
@@ -38,15 +37,16 @@ export function Intro({ open, t, years, cells, onClose }: IntroProps) {
           </svg>
         </button>
         <h2 id="intro-title">{t.introTitle}</h2>
-        <p>{t.introP1}</p>
-        <p>{t.introP2(years, cells)}</p>
+        <p>
+          {t.introP1} <mark className="intro-highlight">{t.introHighlight}</mark>
+        </p>
+        <p>{t.introP2(years)}</p>
         <h3>{t.howTitle}</h3>
         <ol>
           {t.howSteps.map((s) => (
             <li key={s}>{s}</li>
           ))}
         </ol>
-        <p className="intro-privacy">{t.privacy}</p>
         <button type="button" className="primary-btn intro-start" onClick={onClose} autoFocus>
           {t.start}
         </button>

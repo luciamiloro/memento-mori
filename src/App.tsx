@@ -5,7 +5,7 @@ import { Controls, type Paper } from './components/Controls';
 import { Poster, type Milestone, type Tone } from './components/Poster';
 import { LifeView } from './components/LifeView';
 import { Intro } from './components/Intro';
-import { DEFAULT_YEARS, MAX_YEARS, clampYears, parseISODate, todayUTC, totalWeeks } from './lib/weeks';
+import { DEFAULT_YEARS, MAX_YEARS, clampYears, parseISODate, todayUTC } from './lib/weeks';
 
 const POSTER_W = 840;
 const MM_TO_PX = 96 / 25.4;
@@ -360,7 +360,6 @@ export default function App() {
         open={introOpen}
         t={t}
         years={years}
-        cells={new Intl.NumberFormat(t.locale).format(totalWeeks(years))}
         onClose={closeIntro}
       />
     </div>

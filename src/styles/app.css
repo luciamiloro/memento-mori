@@ -702,8 +702,15 @@ button:disabled {
   margin-top: 4px;
 }
 
-.intro-privacy {
-  font-size: 13px;
+/* La idea central: subrayada en el color de acento */
+.intro-highlight {
+  background: none;
+  color: var(--text);
+  font-weight: 600;
+  text-decoration: underline;
+  text-decoration-color: var(--accent);
+  text-decoration-thickness: 2px;
+  text-underline-offset: 4px;
 }
 
 .intro-x {

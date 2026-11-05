@@ -44,19 +44,12 @@ export const strings = {
     close: 'Cerrar',
     start: 'Empezar',
     introTitle: '¿Qué es un calendario memento mori?',
-    introP1:
-      'Memento mori es una expresión latina que significa «recordá que vas a morir». Los estoicos, como Séneca y Marco Aurelio, la usaban no para entristecerse sino para no desperdiciar el tiempo: si la vida es finita, cada día cuenta.',
-    introP2:
-      (n: number, cells: string) =>
-      `Este calendario muestra una vida de ${n} años en semanas: ${cells} casillas, una por cada semana. Las que ya viviste aparecen rellenas, la actual en rojo y el resto queda por delante. La edad final la elegís vos.`,
+    introP1: 'Memento mori es una expresión latina que significa «recordá que vas a morir». Los estoicos la usaban',
+    introHighlight: 'no para entristecerse, sino para no desperdiciar el tiempo: la vida es finita.',
+    introP2: (n: number) =>
+      `Cada casilla es una semana de una vida de ${n} años: las vividas aparecen rellenas y la actual, en rojo.`,
     howTitle: 'Cómo usarlo',
-    howSteps: [
-      'Cargá tu fecha de nacimiento.',
-      'Si querés, sumá tu nombre y hasta seis hitos de tu vida: se marcan en la grilla.',
-      'Miralo en pantalla o como póster, con fondo oscuro o claro, en A4 o A3.',
-      'Imprimilo, guardalo como PDF o descargalo en PNG a 300 dpi para enmarcarlo.',
-    ],
-    privacy: 'Es gratis y tus datos no salen de tu navegador: no se envían a ningún servidor.',
+    howSteps: ['Cargá tu fecha de nacimiento.', 'Sumá hitos, si querés.', 'Imprimilo o compartilo.'],
     // vista web
     view: 'Vista',
     viewWeb: 'Pantalla',
@@ -118,19 +111,12 @@ export const strings = {
     close: 'Close',
     start: 'Get started',
     introTitle: 'What is a memento mori calendar?',
-    introP1:
-      'Memento mori is a Latin phrase meaning “remember that you will die”. Stoics like Seneca and Marcus Aurelius used it not to feel gloomy but to stop wasting time: if life is finite, every day counts.',
-    introP2:
-      (n: number, cells: string) =>
-      `This calendar shows a ${n}-year life in weeks: ${cells} squares, one for each week. The ones you have lived are filled in, the current one is red, and the rest lie ahead. You choose the final age.`,
+    introP1: 'Memento mori is a Latin phrase meaning “remember that you will die”. The Stoics used it',
+    introHighlight: 'not to feel gloomy, but to stop wasting time: life is finite.',
+    introP2: (n: number) =>
+      `Each square is one week of a ${n}-year life: the ones you have lived are filled in and the current one is red.`,
     howTitle: 'How to use it',
-    howSteps: [
-      'Enter your date of birth.',
-      'Optionally add your name and up to six milestones: they are marked on the grid.',
-      'View it on screen or as a poster, on a dark or light background, in A4 or A3.',
-      'Print it, save it as a PDF or download a 300 dpi PNG to frame it.',
-    ],
-    privacy: 'It is free and your data never leaves your browser: nothing is sent to a server.',
+    howSteps: ['Enter your date of birth.', 'Add milestones, if you like.', 'Print it or share it.'],
     view: 'View',
     viewWeb: 'Screen',
     viewPoster: 'Poster',
